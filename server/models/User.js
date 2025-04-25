@@ -14,7 +14,11 @@ const userSchema = new mongoose.Schema({
       quantity: { type: Number, default: 1 },
     }
   ],
-  
+  verified: {
+    type: Boolean,
+    default: false,
+  },
+  verificationToken: String,
 });
 
 userSchema.pre('save', async function (next) {

@@ -1,5 +1,7 @@
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 exports.register = async (req, res) => {
   const { username, email, password } = req.body;
@@ -7,15 +9,31 @@ exports.register = async (req, res) => {
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: 'User already exists' });
 
-    const user = await User.create({ username, email, password });
-    res.status(201).json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      token: generateToken(user._id),
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+
+    const user = await User.create({ username, email, password, verificationToken });
+
+    // Send verification email
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
     });
+
+    const link = `http://localhost:5000/api/auth/verify?token=${verificationToken}`;
+
+    await transporter.sendMail({
+      from: `"Online Bookshop" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Verify your email',
+      html: `<p>Click <a href="${link}">here</a> to verify your account.</p>`,
+    });
+
+    res.status(201).json({ message: 'Registration successful. Please check your email to verify.' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Registration failed' });
   }
 };
 
@@ -23,7 +41,19 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (user && (await user.matchPassword(password))) {
+
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // ✅ Check if user is verified
+    if (!user.verified) {
+      return res.status(401).json({ message: 'Please verify your email first' });
+    }
+
+    const isMatch = await user.matchPassword(password);
+
+    if (isMatch) {
       res.json({
         _id: user._id,
         username: user.username,

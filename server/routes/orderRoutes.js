@@ -3,7 +3,7 @@ const { protect } = require('../middleware/authMiddleware');
 const { placeOrder, getUserOrders } = require('../controllers/orderController');
 const { body } = require('express-validator');
 const validateRequest = require('../middleware/validateRequest');
-// const Order = require('../models/orderModel');
+const Order = require('../models/Order');
 
 const router = express.Router();
 
@@ -66,6 +66,9 @@ router.get('/:orderId/invoice', protect, async (req, res) => {
       </table>
 
       <h3>Total: $${order.totalPrice}</h3>
+      <button onclick="window.print()" style="margin-top:20px;padding:10px 15px;">
+        🖨️ Print Invoice
+      </button>
     </body>
     </html>
   `;
