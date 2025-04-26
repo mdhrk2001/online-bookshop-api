@@ -1,8 +1,9 @@
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { CartContext } from '../context/CartContext';
 import { WishlistContext } from '../context/WishlistContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import ConfirmModal from '../components/ConfirmModal';
 
 function CartPage() {
   const {
@@ -14,6 +15,8 @@ function CartPage() {
   
   const { addToWishlist } = useContext(WishlistContext);
   const navigate = useNavigate();
+
+  const [showModal, setShowModal] = useState(false); // 👈 modal state
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -29,8 +32,17 @@ function CartPage() {
   };
 
   const handleClearCart = () => {
+    setShowModal(true); // 👈 show modal
+  };
+
+  const confirmClearCart = () => {
     clearCart();
     toast.success('Cart cleared');
+    setShowModal(false); // 👈 hide modal after confirm
+  };
+
+  const cancelClearCart = () => {
+    setShowModal(false); // 👈 hide modal on cancel
   };
 
   const handleSaveForLater = async (item) => {
@@ -46,7 +58,7 @@ function CartPage() {
     } catch (err) {
       toast.error('Failed to move item to wishlist');
     }
-  };  
+  };
 
   return (
     <div style={{ padding: '1rem' }}>
@@ -145,6 +157,14 @@ function CartPage() {
               Clear Cart
             </button>
           </div>
+
+          {/* 🧼 Confirmation Modal */}
+          <ConfirmModal
+            isOpen={showModal}
+            onConfirm={confirmClearCart}
+            onCancel={cancelClearCart}
+            message="Are you sure you want to clear your cart?"
+          />
         </>
       )}
     </div>

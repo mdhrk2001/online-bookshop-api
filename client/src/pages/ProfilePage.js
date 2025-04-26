@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
+import { toast } from 'react-toastify';
 
 function ProfilePage() {
   const { userToken } = useContext(AuthContext);
@@ -9,8 +10,8 @@ function ProfilePage() {
   const [form, setForm] = useState({ username: '', email: '', password: '' });
 
   useEffect(() => {
-    if (!userToken) return; // ✅ Stop early if logged out
-  
+    if (!userToken) return;
+
     const fetchProfile = async () => {
       try {
         const res = await api.get('/users/profile', {
@@ -23,10 +24,10 @@ function ProfilePage() {
           password: '',
         });
       } catch (err) {
-        console.log('Fetch profile error:', err); // optional for debugging
+        console.log('Fetch profile error:', err);
       }
     };
-  
+
     const fetchOrders = async () => {
       try {
         const res = await api.get('/orders', {
@@ -34,13 +35,13 @@ function ProfilePage() {
         });
         setOrders(res.data);
       } catch (err) {
-        console.log('Fetch orders error:', err); // avoid alert on logout
+        console.log('Fetch orders error:', err);
       }
     };
-  
+
     fetchProfile();
     fetchOrders();
-  }, [userToken]);  
+  }, [userToken]);
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -59,6 +60,22 @@ function ProfilePage() {
     }
   };
 
+  const handleViewInvoice = async (orderId) => {
+    try {
+      const res = await api.get(`/orders/${orderId}/invoice`, {
+        headers: { Authorization: `Bearer ${userToken}` },
+        responseType: 'blob',
+      });
+  
+      const blob = new Blob([res.data], { type: 'application/pdf' }); // 👈 Must be application/pdf
+      const fileURL = URL.createObjectURL(blob);
+      window.open(fileURL); // 👈 Preview in new tab
+    } catch (err) {
+      toast.error('Failed to preview invoice');
+      console.error(err.response?.data || err.message);
+    }
+  };
+  
   return (
     <div>
       <h2>Profile</h2>
@@ -104,13 +121,9 @@ function ProfilePage() {
               <p><strong>Order ID:</strong> {order._id}</p>
               <p><strong>Total:</strong> ${order.totalPrice}</p>
               <p><strong>Date:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
-              <a
-                href={`http://localhost:5000/api/orders/${order._id}/invoice`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View Invoice
-              </a>
+              <button onClick={() => handleViewInvoice(order._id)}>
+                🧾 View Invoice
+              </button>
             </li>
           ))}
         </ul>
