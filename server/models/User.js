@@ -14,6 +14,14 @@ const userSchema = new mongoose.Schema({
       quantity: { type: Number, default: 1 },
     }
   ],
+  wishlist: [
+    {
+      bookId: String,
+      title: String,
+      thumbnail: String,
+      price: Number,
+    }
+  ],  
   verified: {
     type: Boolean,
     default: false,

@@ -30,7 +30,8 @@ router.get('/verify', async (req, res) => {
   user.verificationToken = undefined;
   await user.save();
 
-  res.send('Email verified! You can now log in.');
+  // Redirect to frontend success page
+  res.redirect('http://localhost:3000/verified');
 });
 
 // Resend verification email

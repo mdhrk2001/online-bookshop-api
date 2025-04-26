@@ -2,10 +2,11 @@ import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 import api from '../services/api';
 
 function CheckoutPage() {
-  const { cart, fetchCart } = useContext(CartContext);
+  const { cart, setCart } = useContext(CartContext);
   const { userToken } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -39,12 +40,17 @@ function CheckoutPage() {
       }, {
         headers: { Authorization: `Bearer ${userToken}` },
       });
-
-      alert('Order placed successfully!');
-      fetchCart(); // Clear local cart state
-      navigate('/profile'); // Or navigate to order success page
+  
+      setCart([]); // ✅ Directly clear local cart
+      toast.success('Order placed successfully!');
+      navigate('/order-success', {
+        state: {
+          orderId: res.data.order._id,
+          order: res.data.order
+        }
+      });      
     } catch (err) {
-      alert('Order failed');
+      toast.error('Order failed');
     }
   };
 

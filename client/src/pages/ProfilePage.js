@@ -9,6 +9,8 @@ function ProfilePage() {
   const [form, setForm] = useState({ username: '', email: '', password: '' });
 
   useEffect(() => {
+    if (!userToken) return; // ✅ Stop early if logged out
+  
     const fetchProfile = async () => {
       try {
         const res = await api.get('/users/profile', {
@@ -21,10 +23,10 @@ function ProfilePage() {
           password: '',
         });
       } catch (err) {
-        alert('Failed to load profile');
+        console.log('Fetch profile error:', err); // optional for debugging
       }
     };
-
+  
     const fetchOrders = async () => {
       try {
         const res = await api.get('/orders', {
@@ -32,13 +34,13 @@ function ProfilePage() {
         });
         setOrders(res.data);
       } catch (err) {
-        alert('Failed to load orders');
+        console.log('Fetch orders error:', err); // avoid alert on logout
       }
     };
-
+  
     fetchProfile();
     fetchOrders();
-  }, [userToken]);
+  }, [userToken]);  
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
