@@ -1,30 +1,32 @@
 import { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import api from '../services/api';
 import { CartContext } from '../context/CartContext';
 import { toast } from 'react-toastify';
+import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function BookDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToCart } = useContext(CartContext);
+
   const [book, setBook] = useState(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const { addToCart } = useContext(CartContext);
+  const [rating, setRating] = useState(0);
 
   useEffect(() => {
     const fetchBook = async () => {
       try {
         const res = await api.get(`/books/${id}`);
         setBook(res.data);
+        setRating(Math.floor(Math.random() * 5) + 1); // ⭐ Set random rating once
       } catch (err) {
-        console.error('Failed to fetch book details');
+        console.error('Failed to fetch book details:', err.message);
+        toast.error('Failed to load book details.');
       }
     };
 
-    if (id) {
-      fetchBook();
-    }
+    if (id) fetchBook();
   }, [id]);
 
   const handleAddToCart = () => {
@@ -49,7 +51,7 @@ function BookDetailsPage() {
 
   const renderDescription = () => {
     if (!book.description) {
-      return <p>No Description Available.</p>;
+      return <p style={{ color: '#666' }}>No Description Available.</p>;
     }
 
     const shortened = book.description.slice(0, 500);
@@ -66,7 +68,9 @@ function BookDetailsPage() {
           >
             <div
               dangerouslySetInnerHTML={{
-                __html: showFullDescription ? book.description : shortened + (book.description.length > 500 ? '...' : ''),
+                __html: showFullDescription
+                  ? book.description
+                  : shortened + (book.description.length > 500 ? '...' : ''),
               }}
             />
           </motion.div>
@@ -92,37 +96,41 @@ function BookDetailsPage() {
     );
   };
 
-  const renderRating = () => {
-    const rating = Math.floor(Math.random() * 5) + 1; // Mock random rating ⭐
-    return (
-      <div style={{ marginTop: '10px' }}>
-        <strong>Rating:</strong> {' '}
-        {'⭐'.repeat(rating)}
-        {'☆'.repeat(5 - rating)}
-      </div>
-    );
-  };
+  const renderRating = () => (
+    <div style={{ marginTop: '10px' }}>
+      <strong>Rating:</strong> {' '}
+      {'⭐'.repeat(rating)}
+      {'☆'.repeat(5 - rating)}
+    </div>
+  );
 
   return (
-    <div style={{ padding: '1rem', position: 'relative', paddingBottom: '120px' }}>
+    <div style={{ padding: '1rem', position: 'relative', paddingBottom: '140px' }}>
       
-      {/* 🔥 Back to Home Button */}
-      <Link to="/" style={{
-        display: 'inline-block',
-        marginBottom: '20px',
-        background: '#007BFF',
-        color: 'white',
-        padding: '8px 16px',
-        borderRadius: '5px',
-        textDecoration: 'none'
-      }}>
+      {/* 🔙 Back to Home */}
+      <Link
+        to="/"
+        style={{
+          display: 'inline-block',
+          marginBottom: '20px',
+          background: '#007BFF',
+          color: 'white',
+          padding: '8px 16px',
+          borderRadius: '5px',
+          textDecoration: 'none'
+        }}
+      >
         ← Back to Home
       </Link>
 
-      <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-        <img src={book.thumbnail} alt={book.title} style={{ width: '300px', height: '400px', objectFit: 'cover' }} />
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
+        <img
+          src={book.thumbnail || 'https://via.placeholder.com/300x400?text=No+Image'}
+          alt={book.title}
+          style={{ width: '300px', height: '400px', objectFit: 'cover', borderRadius: '8px' }}
+        />
 
-        <div style={{ flex: '1', position: 'relative' }}>
+        <div style={{ flex: '1', minWidth: '250px' }}>
           <h2 style={{ fontSize: '28px' }}>{book.title}</h2>
 
           {book.authors && (
@@ -136,7 +144,7 @@ function BookDetailsPage() {
           <p><strong>Price:</strong> ${book.price}</p>
           <p><strong>Stock:</strong> {book.stock > 0 ? `${book.stock} available` : 'Out of Stock'}</p>
 
-          {/* Stars */}
+          {/* Rating */}
           {renderRating()}
 
           {/* Description */}
@@ -144,7 +152,7 @@ function BookDetailsPage() {
         </div>
       </div>
 
-      {/* Floating Buttons */}
+      {/* 🚀 Floating Action Buttons */}
       {book.stock > 0 && (
         <div style={{ position: 'fixed', bottom: '20px', right: '20px', display: 'flex', gap: '10px', zIndex: 1000 }}>
           <motion.button
