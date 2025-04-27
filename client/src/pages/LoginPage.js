@@ -8,6 +8,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false); // ✅ New
   const [showResend, setShowResend] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -18,7 +19,7 @@ function LoginPage() {
 
     try {
       const res = await api.post('/auth/login', { email, password });
-      login(res.data.token);
+      login(res.data.token, rememberMe); // ✅ Pass rememberMe to login()
       alert('Logged in!');
       navigate('/');
     } catch (err) {
@@ -45,8 +46,34 @@ function LoginPage() {
     <div>
       <form onSubmit={loginHandler}>
         <h2>Login</h2>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
-        <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Password" />
+        
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          required
+        />
+        
+        <input
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          type="password"
+          placeholder="Password"
+          required
+        />
+
+        {/* ✅ Remember Me checkbox */}
+        <div style={{ margin: '10px 0' }}>
+          <label>
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+            />{' '}
+            Remember Me
+          </label>
+        </div>
+
         <button type="submit">Login</button>
       </form>
 

@@ -10,6 +10,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import ProfilePage from './pages/ProfilePage';
 import VerifiedPage from './pages/VerifiedPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
+import BookDetailsPage from './pages/BookDetailsPage';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
       <ToastContainer position="top-center" />
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/books/:id" element={<BookDetailsPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
