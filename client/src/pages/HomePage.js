@@ -2,17 +2,20 @@ import { useEffect, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { CartContext } from '../context/CartContext';
+import { toast } from 'react-toastify';
 
 function HomePage() {
-  const { addToCart } = useContext(CartContext);
+  const { cart, addToCart } = useContext(CartContext);
 
   const [books, setBooks] = useState([]);
   const [filteredBooks, setFilteredBooks] = useState([]);
-  const [query, setQuery] = useState('programming');
+  const [query, setQuery] = useState(''); // 🔥 User input
   const [priceFilter, setPriceFilter] = useState('');
   const [sortOrder, setSortOrder] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const defaultQuery = 'programming'; // 🌟 fallback keyword
 
   // 📚 Fetch books from API
   useEffect(() => {
@@ -20,7 +23,8 @@ function HomePage() {
       setLoading(true);
       setError('');
       try {
-        const res = await api.get(`/books/search?q=${query}`);
+        const keyword = query.trim() ? query : defaultQuery;
+        const res = await api.get(`/books/search?q=${keyword}`);
         setBooks(res.data || []);
         setFilteredBooks(res.data || []);
       } catch (err) {
@@ -38,7 +42,6 @@ function HomePage() {
   useEffect(() => {
     let updated = [...books];
 
-    // Price Filtering
     if (priceFilter === 'low') {
       updated = updated.filter(book => book.price <= 20);
     } else if (priceFilter === 'medium') {
@@ -47,7 +50,6 @@ function HomePage() {
       updated = updated.filter(book => book.price > 50);
     }
 
-    // Sorting
     if (sortOrder === 'price-asc') {
       updated.sort((a, b) => a.price - b.price);
     } else if (sortOrder === 'price-desc') {
@@ -58,6 +60,17 @@ function HomePage() {
 
     setFilteredBooks(updated);
   }, [books, priceFilter, sortOrder]);
+
+  // 🛒 Handle Add to Cart
+  const handleAddToCart = (book) => {
+    const exists = cart.find(item => item.bookId === book.id || item.id === book.id);
+    if (exists) {
+      toast.info('Book is already in the cart!');
+      return;
+    }
+    addToCart(book);
+    toast.success(`${book.title} added to cart!`);
+  };
 
   return (
     <div style={{ padding: '1rem' }}>
@@ -138,7 +151,7 @@ function HomePage() {
                   </Link>
                   <p><strong>${book.price}</strong></p>
                   <button
-                    onClick={() => addToCart(book)}
+                    onClick={() => handleAddToCart(book)}
                     style={{
                       marginTop: '5px',
                       padding: '5px 10px',
